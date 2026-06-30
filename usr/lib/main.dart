@@ -1,40 +1,38 @@
 import 'package:flutter/material.dart';
+import 'dart:math';
 
 void main() {
-  runApp(const ImageGridApp());
+  runApp(const GoogleReviewApp());
 }
 
-class ImageGridApp extends StatelessWidget {
-  const ImageGridApp({super.key});
+class GoogleReviewApp extends StatelessWidget {
+  const GoogleReviewApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Indian Names Image Grid',
+      title: 'Review Screens',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.deepPurple,
-          brightness: Brightness.light,
-        ),
         useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        scaffoldBackgroundColor: Colors.white,
       ),
       initialRoute: '/',
       routes: {
-        '/': (context) => const ImageGridScreen(),
+        '/': (context) => const ReviewPagerScreen(),
       },
     );
   }
 }
 
-class ImageGridScreen extends StatefulWidget {
-  const ImageGridScreen({super.key});
+class ReviewPagerScreen extends StatefulWidget {
+  const ReviewPagerScreen({super.key});
 
   @override
-  State<ImageGridScreen> createState() => _ImageGridScreenState();
+  State<ReviewPagerScreen> createState() => _ReviewPagerScreenState();
 }
 
-class _ImageGridScreenState extends State<ImageGridScreen> {
-  // 100 distinct Indian names (mixed boys and girls)
+class _ReviewPagerScreenState extends State<ReviewPagerScreen> {
   final List<String> names = [
     // 50 Boy Names
     'Aarav', 'Vihaan', 'Vivaan', 'Advik', 'Kabir',
@@ -63,141 +61,202 @@ class _ImageGridScreenState extends State<ImageGridScreen> {
   @override
   void initState() {
     super.initState();
-    // Shuffle the names to mix boys and girls randomly, but they will stay consistent per session.
-    names.shuffle();
+    // Maintain same order or shuffle, keeping them consistent for testing.
+    names.shuffle(Random(42));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('100 Portraits'),
-        centerTitle: true,
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        elevation: 0,
-      ),
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            // Determine number of columns based on screen width
-            int crossAxisCount = 2;
-            if (constraints.maxWidth > 1200) {
-              crossAxisCount = 6;
-            } else if (constraints.maxWidth > 900) {
-              crossAxisCount = 5;
-            } else if (constraints.maxWidth > 600) {
-              crossAxisCount = 4;
-            } else if (constraints.maxWidth > 400) {
-              crossAxisCount = 3;
-            }
-
-            return GridView.builder(
-              padding: const EdgeInsets.all(16.0),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: crossAxisCount,
-                childAspectRatio: 0.8,
-                crossAxisSpacing: 16.0,
-                mainAxisSpacing: 16.0,
-              ),
-              itemCount: names.length,
-              itemBuilder: (context, index) {
-                final name = names[index];
-                // Using multiavatar API for diverse, unique characters seeded by the name
-                final imageUrl = 'https://api.multiavatar.com/${Uri.encodeComponent(name)}.png';
-
-                return ProfileCard(name: name, imageUrl: imageUrl);
-              },
-            );
-          },
-        ),
+      body: PageView.builder(
+        itemCount: names.length,
+        itemBuilder: (context, index) {
+          return ReviewScreenItem(name: names[index]);
+        },
       ),
     );
   }
 }
 
-class ProfileCard extends StatelessWidget {
+class ReviewScreenItem extends StatelessWidget {
   final String name;
-  final String imageUrl;
 
-  const ProfileCard({
-    super.key,
-    required this.name,
-    required this.imageUrl,
-  });
+  const ReviewScreenItem({super.key, required this.name});
+
+  Color _getAvatarColor(String name) {
+    final colors = [
+      Colors.pink,
+      Colors.purple,
+      Colors.deepPurple,
+      Colors.indigo,
+      Colors.blue,
+      Colors.teal,
+      Colors.green,
+      Colors.orange,
+      Colors.deepOrange,
+      Colors.brown,
+    ];
+    final hash = name.hashCode;
+    return colors[hash % colors.length];
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
-              Theme.of(context).colorScheme.surfaceVariant,
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Hero(
-                  tag: name,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
+    final avatarColor = _getAvatarColor(name);
+    final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
+
+    return SafeArea(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // AppBar Area
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
+            child: Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () {},
+                ),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    'Decathlon Sports - Pacific Mall, New Delhi',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
                     ),
-                    child: CircleAvatar(
-                      backgroundColor: Colors.white,
-                      child: ClipOval(
-                        child: Image.network(
-                          imageUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return const Icon(Icons.person, size: 48, color: Colors.grey);
-                          },
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return const Center(child: CircularProgressIndicator());
-                          },
-                        ),
-                      ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 16),
+          
+          // User Info Area
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 24,
+                  backgroundColor: avatarColor,
+                  child: Text(
+                    initial,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
-              color: Theme.of(context).colorScheme.surface,
-              child: Text(
-                name,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          Text(
+                            'Posting publicly across Google',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(
+                            Icons.info_outline,
+                            size: 14,
+                            color: Colors.grey.shade600,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 24),
+          
+          // Stars
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: Row(
+              children: List.generate(5, (index) {
+                return const Padding(
+                  padding: EdgeInsets.only(right: 8.0),
+                  child: Icon(
+                    Icons.star,
+                    color: Colors.amber,
+                    size: 40,
+                  ),
+                );
+              }),
+            ),
+          ),
+          
+          const SizedBox(height: 24),
+          const Divider(height: 1, thickness: 1),
+          const SizedBox(height: 16),
+          
+          // Text Input Placeholder
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: Text(
+              'Share details of your own experience at this place',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey.shade500,
               ),
             ),
-          ],
-        ),
+          ),
+          
+          const Spacer(),
+          
+          // Bottom Actions
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () {},
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue.shade100,
+                    foregroundColor: Colors.blue.shade900,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                  ),
+                  icon: const Icon(Icons.auto_awesome, size: 18),
+                  label: const Text(
+                    'Post',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
